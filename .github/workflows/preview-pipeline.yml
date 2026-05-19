@@ -2,9 +2,8 @@ name: Elio Tax Preview Engine
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, synchronize] # 'synchronize' ensures the script runs when you push updates to an open PR
 
-# Prevent deployment clashes if you push multiple fast updates to the same PR
 concurrency:
   group: preview-${{ github.event.pull_request.number }}
   cancel-in-progress: true
@@ -17,26 +16,25 @@ jobs:
       APP_NAME: "elio-tax-preview-pr-${{ github.event.pull_request.number }}"
 
     steps:
+      # UPGRADED TO V6: Eliminates the Node.js 20 deprecation error entirely
       - name: Checkout Code Base
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install and Setup flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Dynamically Launch & Deploy Preview to Fly.io
         run: |
-          echo "Initializing isolated infrastructure for $APP_NAME..."
+          echo "Checking infrastructure for $APP_NAME..."
           
-          # 1. Spin up a brand new independent app container slot
-          flyctl apps create $APP_NAME --org personal
+          # Use || true so the script keeps running if the app is already created
+          flyctl apps create $APP_NAME --org personal || true
           
-          # 2. Allocate an independent PostgreSQL instance node
-          flyctl postgres create --name "$APP_NAME-db" --region fra --initial-cluster-size 1 --vm-size shared-cpu-1x
+          # Provision an independent PostgreSQL instance node if it doesn't exist
+          flyctl postgres create --name "$APP_NAME-db" --region fra --initial-cluster-size 1 --vm-size shared-cpu-1x || true
           
-          # 3. Join the fresh Postgres node database to the new app container securely
-          flyctl postgres attach "$APP_NAME-db" --app $APP_NAME
+          # Attach database node securely (will continue if already attached)
+          flyctl postgres attach "$APP_NAME-db" --app $APP_NAME || true
           
-          # 4. Trigger the build execution loop
-          # We force --remote-only to let Fly's servers do the heavy lifting
-          # We pass --ha=false to prevent Fly from building duplicate redundant clusters (saves resources)
+          # Deploy changes cleanly using Fly's builders
           flyctl deploy --app $APP_NAME --ha=false --remote-only
