@@ -3,3 +3,5 @@
 # first changed after render
 
 # next try
+
+# update yml file to delete branch automatically

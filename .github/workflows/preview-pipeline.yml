@@ -20,11 +20,16 @@ jobs:
           # You can add a curl request here to trigger your Render deploy hook if needed:
           # curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
 
-      # TASK 2: Handle a CLOSED and MERGED side branch
-      - name: Auto-Merge and Delete Side Branch
+      # ---------------------------------------------------------------
+      # TASK 2: CLEAN MERGE / DELETE SIDE BRANCH ON PR CLOSED
+      # ---------------------------------------------------------------
+      - name: Clean Merge Side Branch into Main
         if: github.event.action == 'closed' && github.event.pull_request.merged == true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "PR approved. Cleaning up git network tree..."
-          gh pr merge ${{ github.event.pull_request.number }} --delete-branch --admin
+          echo "PR was successfully merged. Deleting side branch tracking..."
+
+          # Delete the remote side branch cleanly using GitHub API
+          # This works perfectly even if the PR was already merged manually in the UI!
+          gh api -X DELETE repos/${{ github.repository }}/git/refs/heads/${{ github.event.pull_request.head.ref }}
