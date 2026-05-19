@@ -2,19 +2,6 @@
 name: Elio Tax Full Auto-Merge Engine
 
 on:
-  push:
-    branches-ignore:
-      - master # Do not run when pushing directly to master
-
-jobs:
-  auto-orchestration:
-    runs-on: ubuntu-latest
-
-    # CRITICAL: Gives the token authorization to create, write, and delete references
-
-name: Elio Tax Render Preview Engine
-
-on:
   pull_request:
     types: [opened, synchronize, closed]
 
