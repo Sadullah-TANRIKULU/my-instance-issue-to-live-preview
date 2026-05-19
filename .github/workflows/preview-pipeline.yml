@@ -1,3 +1,17 @@
+
+name: Elio Tax Full Auto-Merge Engine
+
+on:
+  push:
+    branches-ignore:
+      - master # Do not run when pushing directly to master
+
+jobs:
+  auto-orchestration:
+    runs-on: ubuntu-latest
+
+    # CRITICAL: Gives the token authorization to create, write, and delete references
+
 name: Elio Tax Render Preview Engine
 
 on:
@@ -9,6 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     
     # 1. Elevates token authority to bypass the HTTP 403 block
+
     permissions:
       contents: write
       pull-requests: write
@@ -17,6 +32,44 @@ jobs:
       - name: Checkout Code Base
         uses: actions/checkout@v6
 
+      - name: Check or Create Pull Request
+        id: manage_pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Checking if a PR exists for branch: ${{ github.ref_name }}"
+          EXISTING_PR=$(gh pr list --head "${{ github.ref_name }}" --json number --jq '.[0].number')
+
+          if [ -z "$EXISTING_PR" ]; then
+            echo "No PR found. Creating a new Pull Request automatically..."
+            # Create the PR programmatically
+            NEW_PR=$(gh pr create \
+              --base master \
+              --head "${{ github.ref_name }}" \
+              --title "🚀 Auto-Merge: ${{ github.ref_name }}" \
+              --body "Automated workflow pipeline execution. Merging directly into master branch.")
+            
+            # Extract the new PR number from the generated URL
+            PR_NUM=$(echo "$NEW_PR" | grep -oE '[0-9]+$')
+            echo "pr_number=$PR_NUM" >> $GITHUB_OUTPUT
+          else
+            echo "Found existing open PR #${EXISTING_PR}"
+            echo "pr_number=$EXISTING_PR" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Execute Full Automated Merge and Cleanup
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TARGET_PR="${{ steps.manage_pr.outputs.pr_number }}"
+          echo "Initiating forced auto-merge sequence for PR #${TARGET_PR}..."
+
+          # 1. Merges the PR into master instantly via the GitHub CLI tool
+          # 2. Automatically deletes the side branch tracking line upon success (--delete-branch)
+          # 3. Uses administrative bypass (--admin) to ensure smooth operations
+          gh pr merge $TARGET_PR --merge --delete-branch --admin
+
+          echo "🎉 Success! Code is merged into master and branch has been cleaned up."
       - name: Trigger Render PR Preview
         if: github.event.action == 'opened' || github.event.action == 'synchronize'
         run: |
