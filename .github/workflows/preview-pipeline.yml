@@ -1,55 +1,58 @@
-name: Elio Tax Full Auto-Merge Engine
+name: Elio Tax Interactive Pipeline Engine
 
 on:
   push:
     branches-ignore:
       - master
+  issue_comment:
+    types: [created] # Triggers when someone comments inside a PR
 
 jobs:
-  auto-orchestration:
+  # JOB 1: Automatically open the PR and keep it open for Render to build the live bot
+  create-pr:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    
     permissions:
       contents: write
       pull-requests: write
-
     steps:
       - name: Checkout Code Base
         uses: actions/checkout@v6
-        with:
-          fetch-depth: 0 # Ensures origin/master is visible to the runner
 
-      - name: Check or Create Pull Request
-        id: manage_pr
+      - name: Auto-Create Active Staging PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Checking if a PR exists for branch: ${{ github.ref_name }}"
           EXISTING_PR=$(gh pr list --head "${{ github.ref_name }}" --json number --jq '.[0].number')
-          
           if [ -z "$EXISTING_PR" ]; then
-            echo "No PR found. Creating a new Pull Request automatically..."
-            NEW_PR=$(gh pr create \
+            gh pr create \
               --base master \
               --head "${{ github.ref_name }}" \
-              --title "🚀 Auto-Merge: ${{ github.ref_name }}" \
-              --body "Automated workflow pipeline execution. Merging directly into master branch.")
-            
-            PR_NUM=$(echo "$NEW_PR" | grep -oE '[0-9]+$')
-            echo "pr_number=$PR_NUM" >> $GITHUB_OUTPUT
-          else
-            echo "Found existing open PR #${EXISTING_PR}"
-            echo "pr_number=$EXISTING_PR" >> $GITHUB_OUTPUT
+              --title "🔍 Review Needed: ${{ github.ref_name }}" \
+              --body "### 📡 Staging Bot Active! \nTest the bot responses directly inside Slack. \n\nWhen ready to deploy to production, reply to this PR with the comment: \n\`/approve-merge\`"
           fi
 
-      - name: Execute Full Automated Merge and Cleanup
+  # JOB 2: Listen for the magic comment, then merge and clean up everything
+  human-approved-merge:
+    if: github.event_name == 'issue_comment' && github.event.issue.pull_request != null && contains(github.event.comment.body, '/approve-merge')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout Entire Code Base
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Execute Authorized Merge and Cleanup
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TARGET_PR="${{ steps.manage_pr.outputs.pr_number }}"
-          echo "Initiating forced auto-merge sequence for PR #${TARGET_PR}..."
+          # Fetch the current PR number from the comment context
+          PR_NUM="${{ github.event.issue.number }}"
+          echo "Human approval detected via comment on PR #${PR_NUM}. Commencing production release..."
           
-          # Now that master is fetched, this merge command will succeed flawlessly!
-          gh pr merge $TARGET_PR --merge --delete-branch --admin
-          
-          echo "🎉 Success! Code is merged into master and branch has been cleaned up."
+          # Merge the PR and delete the tracking side branch instantly
+          gh pr merge $PR_NUM --merge --delete-branch --admin
+          echo "🎉 Production release complete. Staging server safely recycled."
