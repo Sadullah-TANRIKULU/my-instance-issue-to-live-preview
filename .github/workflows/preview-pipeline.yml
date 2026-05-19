@@ -7,29 +7,26 @@ on:
 jobs:
   manage-preview:
     runs-on: ubuntu-latest
+    
+    # 1. Elevates token authority to bypass the HTTP 403 block
+    permissions:
+      contents: write
+      pull-requests: write
+
     steps:
       - name: Checkout Code Base
-        uses: actions/checkout@v6 # Modern Node 24 support
+        uses: actions/checkout@v6
 
-      # TASK 3: Trigger preview deployment on an OPEN Pull Request
       - name: Trigger Render PR Preview
         if: github.event.action == 'opened' || github.event.action == 'synchronize'
         run: |
           echo "PR #${{ github.event.pull_request.number }} is active. Triggering build..."
-          # Render handles the isolation automatically when you link the repo.
-          # You can add a curl request here to trigger your Render deploy hook if needed:
-          # curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
 
-      # ---------------------------------------------------------------
-      # TASK 2: CLEAN MERGE / DELETE SIDE BRANCH ON PR CLOSED
-      # ---------------------------------------------------------------
-      - name: Clean Merge Side Branch into Main
+      # TASK 2: Clean branch cleanup utilizing elevated API execution blocks
+      - name: Auto-Merge and Delete Side Branch
         if: github.event.action == 'closed' && github.event.pull_request.merged == true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "PR was successfully merged. Deleting side branch tracking..."
-
-          # Delete the remote side branch cleanly using GitHub API
-          # This works perfectly even if the PR was already merged manually in the UI!
+          echo "PR approved. Cleaning up git network tree..."
           gh api -X DELETE repos/${{ github.repository }}/git/refs/heads/${{ github.event.pull_request.head.ref }}
