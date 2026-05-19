@@ -1,40 +1,30 @@
-name: Elio Tax Preview Engine
+name: Elio Tax Render Preview Engine
 
 on:
   pull_request:
-    types: [opened, synchronize] # 'synchronize' ensures the script runs when you push updates to an open PR
-
-concurrency:
-  group: preview-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+    types: [opened, synchronize, closed]
 
 jobs:
-  deploy-preview:
+  manage-preview:
     runs-on: ubuntu-latest
-    env:
-      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-      APP_NAME: "elio-tax-preview-pr-${{ github.event.pull_request.number }}"
-
     steps:
-      # UPGRADED TO V6: Eliminates the Node.js 20 deprecation error entirely
       - name: Checkout Code Base
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6 # Modern Node 24 support
 
-      - name: Install and Setup flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@master
-
-      - name: Dynamically Launch & Deploy Preview to Fly.io
+      # TASK 3: Trigger preview deployment on an OPEN Pull Request
+      - name: Trigger Render PR Preview
+        if: github.event.action == 'opened' || github.event.action == 'synchronize'
         run: |
-          echo "Checking infrastructure for $APP_NAME..."
-          
-          # Use || true so the script keeps running if the app is already created
-          flyctl apps create $APP_NAME --org personal || true
-          
-          # Provision an independent PostgreSQL instance node if it doesn't exist
-          flyctl postgres create --name "$APP_NAME-db" --region fra --initial-cluster-size 1 --vm-size shared-cpu-1x || true
-          
-          # Attach database node securely (will continue if already attached)
-          flyctl postgres attach "$APP_NAME-db" --app $APP_NAME || true
-          
-          # Deploy changes cleanly using Fly's builders
-          flyctl deploy --app $APP_NAME --ha=false --remote-only
+          echo "PR #${{ github.event.pull_request.number }} is active. Triggering build..."
+          # Render handles the isolation automatically when you link the repo.
+          # You can add a curl request here to trigger your Render deploy hook if needed:
+          # curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
+
+      # TASK 2: Handle a CLOSED and MERGED side branch
+      - name: Auto-Merge and Delete Side Branch
+        if: github.event.action == 'closed' && github.event.pull_request.merged == true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "PR approved. Cleaning up git network tree..."
+          gh pr merge ${{ github.event.pull_request.number }} --delete-branch --admin
