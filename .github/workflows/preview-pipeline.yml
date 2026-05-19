@@ -1,102 +1,58 @@
-name: Elio Tax Preview Engine
+name: Elio Tax Full Auto-Merge Engine
 
 on:
-  pull_request:
-    types: [opened, closed]
-
-# Ensure only one deployment job runs at a time per Pull Request to prevent race conditions
-concurrency:
-  group: preview-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  push:
+    branches-ignore:
+      - master # Do not run when pushing directly to master
 
 jobs:
-  orchestrate-preview:
+  auto-orchestration:
     runs-on: ubuntu-latest
-    env:
-      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      PR_NUMBER: ${{ github.event.pull_request.number }}
-      APP_NAME: "elio-tax-preview-pr-${{ github.event.pull_request.number }}"
+
+    # CRITICAL: Gives the token authorization to create, write, and delete references
+    permissions:
+      contents: write
+      pull-requests: write
 
     steps:
-      # ---------------------------------------------------------------
-      # TASK 1 & 2: CONTEXT SETUP & CHECKOUT
-      # ---------------------------------------------------------------
       - name: Checkout Code Base
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Fetches all history so you can manage side branches smoothly
+        uses: actions/checkout@v6
 
-      # ---------------------------------------------------------------
-      # TASK 3: COMMUNICATING WITH GEMINI
-      # ---------------------------------------------------------------
-      - name: Ask Gemini to Analyze PR UI Changes
-        if: github.event.action == 'opened'
-        run: |
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          PR_BODY="${{ github.event.pull_request.body }}"
-
-          # Clean input text strings for safe JSON nesting
-          CLEAN_TEXT=$(echo "PR Title: $PR_TITLE. Description: $PR_BODY" | jq -aRs .)
-
-          RESPONSE=$(curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}" \
-            -H "Content-Type: application/json" \
-            -d "{\"contents\": [{\"parts\": [{\"text\": \"You are an infrastructure bot. Read this PR data and verify if it represents a clean UI layout change: $CLEAN_TEXT\"}]}]}")
-
-          echo "Gemini Analysis Outcome:"
-          echo "$RESPONSE" | jq '.candidates[0].content.parts[0].text'
-
-      # ---------------------------------------------------------------
-      # TASK 4: COMMUNICATING WITH FLY.IO (DEPLOY ON PR OPENED)
-      # ---------------------------------------------------------------
-      - name: Install and Setup flyctl
-        if: github.event.action == 'opened'
-        uses: superfly/flyctl-actions/setup-flyctl@master
-
-      - name: Dynamically Launch & Deploy Preview to Fly.io
-        if: github.event.action == 'opened'
-        run: |
-          echo "Initializing isolated infrastructure for $APP_NAME..."
-
-          # 1. Launch a brand-new, isolated app container under Elio Tax org
-          flyctl apps create $APP_NAME --org personal
-
-          # 2. Provision an independent PostgreSQL instance in Zurich/Frankfurt region
-          flyctl postgres create --name "$APP_NAME-db" --region fra --initial-cluster-size 1 --vm-size shared-cpu-1x
-
-          # 3. Securely attach the fresh Postgres node to the preview app container
-          flyctl postgres attach "$APP_NAME-db" --app $APP_NAME
-
-          # 4. Trigger remote container build and deployment
-          # --ha=false disables high availability to keep the preview restricted to 1 machine (cost saving)
-          flyctl deploy --app $APP_NAME --ha=false --remote-only
-
-      # ---------------------------------------------------------------
-      # TASK 4: ALTERNATIVE ENVIRONMENT CLEANUP ON PR CLOSED
-      # ---------------------------------------------------------------
-      - name: Setup flyctl for Cleanup
-        if: github.event.action == 'closed'
-        uses: superfly/flyctl-actions/setup-flyctl@master
-
-      - name: Destroy Temporary Fly.io App and PostgreSQL Nodes
-        if: github.event.action == 'closed'
-        run: |
-          echo "PR Closed. Tearing down isolated sandbox environments..."
-
-          # Delete the main application container node
-          flyctl apps destroy $APP_NAME --yes
-
-          # Delete the dedicated temporary PostgreSQL database node
-          flyctl apps destroy "$APP_NAME-db" --yes
-
-      # ---------------------------------------------------------------
-      # TASK 2: AUTO-MERGING SIDE BRANCH TO MAIN ON PREVIEW APPROVAL
-      # ---------------------------------------------------------------
-      - name: Clean Merge Side Branch into Main
-        if: github.event.action == 'closed' && github.event.pull_request.merged == true
+      - name: Check or Create Pull Request
+        id: manage_pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "PR approved and manually closed as merged. Deleting side branch tracking..."
-          # Uses built-in GitHub CLI to clean up repository branches programmatically
-          gh pr merge $PR_NUMBER --delete-branch --admin
+          echo "Checking if a PR exists for branch: ${{ github.ref_name }}"
+          EXISTING_PR=$(gh pr list --head "${{ github.ref_name }}" --json number --jq '.[0].number')
+
+          if [ -z "$EXISTING_PR" ]; then
+            echo "No PR found. Creating a new Pull Request automatically..."
+            # Create the PR programmatically
+            NEW_PR=$(gh pr create \
+              --base master \
+              --head "${{ github.ref_name }}" \
+              --title "🚀 Auto-Merge: ${{ github.ref_name }}" \
+              --body "Automated workflow pipeline execution. Merging directly into master branch.")
+            
+            # Extract the new PR number from the generated URL
+            PR_NUM=$(echo "$NEW_PR" | grep -oE '[0-9]+$')
+            echo "pr_number=$PR_NUM" >> $GITHUB_OUTPUT
+          else
+            echo "Found existing open PR #${EXISTING_PR}"
+            echo "pr_number=$EXISTING_PR" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Execute Full Automated Merge and Cleanup
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TARGET_PR="${{ steps.manage_pr.outputs.pr_number }}"
+          echo "Initiating forced auto-merge sequence for PR #${TARGET_PR}..."
+
+          # 1. Merges the PR into master instantly via the GitHub CLI tool
+          # 2. Automatically deletes the side branch tracking line upon success (--delete-branch)
+          # 3. Uses administrative bypass (--admin) to ensure smooth operations
+          gh pr merge $TARGET_PR --merge --delete-branch --admin
+
+          echo "🎉 Success! Code is merged into master and branch has been cleaned up."
