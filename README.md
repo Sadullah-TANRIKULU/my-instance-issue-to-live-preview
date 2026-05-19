@@ -5,3 +5,5 @@
 # next try
 
 # update yml file to delete branch automatically
+
+# permission is given to delete branch
