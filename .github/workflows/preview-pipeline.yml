@@ -1,3 +1,4 @@
+
 name: Elio Tax Full Auto-Merge Engine
 
 on:
@@ -10,6 +11,19 @@ jobs:
     runs-on: ubuntu-latest
 
     # CRITICAL: Gives the token authorization to create, write, and delete references
+
+name: Elio Tax Render Preview Engine
+
+on:
+  pull_request:
+    types: [opened, synchronize, closed]
+
+jobs:
+  manage-preview:
+    runs-on: ubuntu-latest
+    
+    # 1. Elevates token authority to bypass the HTTP 403 block
+
     permissions:
       contents: write
       pull-requests: write
@@ -56,3 +70,16 @@ jobs:
           gh pr merge $TARGET_PR --merge --delete-branch --admin
 
           echo "🎉 Success! Code is merged into master and branch has been cleaned up."
+      - name: Trigger Render PR Preview
+        if: github.event.action == 'opened' || github.event.action == 'synchronize'
+        run: |
+          echo "PR #${{ github.event.pull_request.number }} is active. Triggering build..."
+
+      # TASK 2: Clean branch cleanup utilizing elevated API execution blocks
+      - name: Auto-Merge and Delete Side Branch
+        if: github.event.action == 'closed' && github.event.pull_request.merged == true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "PR approved. Cleaning up git network tree..."
+          gh api -X DELETE repos/${{ github.repository }}/git/refs/heads/${{ github.event.pull_request.head.ref }}
