@@ -37,10 +37,10 @@ app.event("app_mention", async ({ event, say }) => {
       },
     });
 
-    const cleanHtmlCode =
-      aiResponse.text || "<h1>Failed to generate component</h1>";
+// Add a unique timestamp so the file content is always fresh
+    const timestamp = new Date().toISOString();
+    const cleanHtmlCode = (aiResponse.text || "<h1>Failed to generate component</h1>") + `\n`;
 
-    // 2. Overwrite your display file with the dynamic AI generated code
     console.log("💾 Writing AI code to index.html...");
     fs.writeFileSync("index.html", cleanHtmlCode);
 
@@ -50,15 +50,15 @@ app.event("app_mention", async ({ event, say }) => {
     execSync('git config user.email "gemini-bot@elio-tax.local"');
     execSync('git config user.name "Gemini Automation Agent"');
 
-    // 2. Target your correct feature branch name
-    execSync("git checkout -B feature-slack-orchestration-v2"); 
-    
-    // 3. Stage the dynamically generated index.html file
+    // Ensure this branch name matches your workflow target precisely!
+    const targetBranch = "feature-slack-orchestration-v2";
+
+    execSync(`git checkout -B ${targetBranch}`); 
     execSync("git add index.html"); 
-    
-    // 4. Commit and force push the dynamic updates to GitHub
     execSync(`git commit -m "feat: AI generated component - ${userPrompt}" --allow-empty`);
-    execSync("git push origin feature-slack-orchestration-v2 --force"); 
+
+    const repoUrl = `https://x-access-token:${process.env.GH_TOKEN}@github.com/Sadullah-TANRIKULU/my-instance-issue-to-live-preview.git`;
+    execSync(`git push ${repoUrl} ${targetBranch} --force`); 
 
     await say(
       "Code pushed to repository! Building your temporary preview sandbox now...",
