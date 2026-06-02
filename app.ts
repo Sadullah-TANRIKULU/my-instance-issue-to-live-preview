@@ -72,11 +72,25 @@ app.event("app_mention", async ({ event, say }) => {
 (async () => {
   await app.start();
   console.log("⚡️ Dynamic AI Generation Engine is active!");
-
+// -----------------------------------------------------------------
+  // DYNAMIC PREVIEW SERVER: Serves the HTML to the preview link
+  // -----------------------------------------------------------------
   const PORT = process.env.PORT || 3000;
+
   const healthCheckServer = http.createServer((req, res) => {
-    res.writeHead(200, { "Content-Type": "text/plain" });
-    res.end("Orchestration Engine Active\n");
+    // Check if the generated index.html file exists
+    if (fs.existsSync("index.html")) {
+      const htmlContent = fs.readFileSync("index.html", "utf8");
+      res.writeHead(200, { "Content-Type": "text/html" }); // Switch content type to HTML!
+      res.end(htmlContent);
+    } else {
+      // Fallback if the file hasn't been generated yet
+      res.writeHead(200, { "Content-Type": "text/plain" });
+      res.end("Elio Tax Orchestration Engine Active. No component generated yet.\n");
+    }
   });
-  healthCheckServer.listen(Number(PORT), "0.0.0.0");
+
+  healthCheckServer.listen(Number(PORT), "0.0.0.0", () => {
+    console.log(`📡 Preview web server listening on port ${PORT} via 0.0.0.0`);
+  });
 })();
