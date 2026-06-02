@@ -44,14 +44,21 @@ app.event("app_mention", async ({ event, say }) => {
     console.log("💾 Writing AI code to index.html...");
     fs.writeFileSync("index.html", cleanHtmlCode);
 
-    // 3. Force push the dynamic changes to GitHub to kick off the pipeline
-    console.log("🚀 Pushing dynamic component to GitHub...");
-    execSync("git checkout -B feature-slack-orchestration-v2");
-    execSync("git add index.html");
-    execSync(
-      `git commit -m "feat: AI generated component - ${userPrompt}" --allow-empty`,
-    );
-    execSync("git push origin feature-slack-orchestration-v2 --force");
+    console.log("🚀 Executing Git operations...");
+    
+    // 1. Set a local author identity so Git stops crashing inside Render
+    execSync('git config user.email "gemini-bot@elio-tax.local"');
+    execSync('git config user.name "Gemini Automation Agent"');
+
+    // 2. Target your correct feature branch name
+    execSync("git checkout -B feature-slack-orchestration-v2"); 
+    
+    // 3. Stage the dynamically generated index.html file
+    execSync("git add index.html"); 
+    
+    // 4. Commit and force push the dynamic updates to GitHub
+    execSync(`git commit -m "feat: AI generated component - ${userPrompt}" --allow-empty`);
+    execSync("git push origin feature-slack-orchestration-v2 --force"); 
 
     await say(
       "Code pushed to repository! Building your temporary preview sandbox now...",

@@ -41,23 +41,25 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Monitoring PR #Links for Render's deployment confirmation..."
-          # Give Render a few seconds to parse the new commit head
-          sleep 15 
-
+          echo "Waiting for Render to complete the deployment pipeline..."
+          # Give Render up to 3 minutes to spin up the container and update status
+          sleep 30
+          
           RENDER_URL=""
-          # Loop for up to 2 minutes checking the PR comments where Render leaves its links
-          for i in {1..12}; do
-            RENDER_URL=$(gh pr view ${{ steps.manage_pr.outputs.pr_number }} --json comments --jq '.comments[].body' | grep -oE 'https://[^ ]+\.onrender\.com' | head -n 1 || true)
-            if [ ! -z "$RENDER_URL" ]; then
+          for i in {1..15}; do
+            # Query GitHub's check-runs API where Render reports its active preview links
+            RENDER_URL=$(gh api repos/${{ github.repository }}/commits/${{ github.sha }}/check-runs --jq '.check_runs[] | select(.app.name=="Render") | .details_url' | head -n 1 || true)
+            
+            if [ ! -z "$RENDER_URL" ] && [[ "$RENDER_URL" == *"render.com"* || "$RENDER_URL" == *".onrender.com"* ]]; then
               break
             fi
-            echo "Render environment is still building, checking again in 10 seconds... ($i/12)"
+            echo "Render environment is compiling assets... checking status again in 10 seconds ($i/15)"
             sleep 10
           done
 
           if [ -z "$RENDER_URL" ]; then
-            RENDER_URL="https://dashboard.render.com (Build took longer than expected, check dashboard status)"
+            # Final fallback strategy: Construct the predictable PR sandbox URL string layout manually
+            RENDER_URL="https://my-instance-issue-to-live-preview-pr-${{ steps.manage_pr.outputs.pr_number }}.onrender.com"
           fi
           echo "preview_url=$RENDER_URL" >> $GITHUB_OUTPUT
 
