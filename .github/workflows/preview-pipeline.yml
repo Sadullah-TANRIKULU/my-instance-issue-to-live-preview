@@ -2,8 +2,6 @@ name: Elio Tax Dynamic Preview Return Loop
 
 on:
   push:
-    branches:
-      - feature-slack-orchestration-v2 # Target your active generation branch specifically
     branches-ignore:
       - master
       - main
