@@ -3,157 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Beautiful Text Display</title>
+    <title>Dark Mode Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
+            font-family: 'Roboto', sans-serif;
             margin: 0;
-            padding: 40px 20px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            box-sizing: border-box;
-        }
-
-        .container {
-            background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-            padding: 40px 60px;
-            max-width: 800px;
-            width: 100%;
-            text-align: left;
-            box-sizing: border-box;
+            background-color: #121212; /* Very dark background */
+            color: #e0e0e0; /* Light grey text */
             line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        h1 {
-            color: #2c3e50;
-            font-size: 2.8em;
-            margin-bottom: 25px;
-            border-bottom: 2px solid #e0e0e0;
-            padding-bottom: 15px;
+        .dashboard-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .header {
+            background-color: #39FF14; /* Bright Neon Green */
+            color: #1a1a1a; /* Dark text for high contrast */
+            padding: 20px 30px;
             text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 255, 0, 0.4); /* Neon shadow */
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
         }
 
-        h2 {
-            color: #34495e;
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 700;
+            text-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .section-title {
             font-size: 1.8em;
-            margin-top: 40px;
+            color: #f0f0f0;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #39FF14; /* Neon green underline */
+            padding-bottom: 10px;
+            display: inline-block;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive grid */
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .metric-card {
+            background-color: #2c2c2c; /* Slightly lighter dark grey for cards */
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4); /* Darker shadow for depth */
+            border: 1px solid #3a3a3a; /* Subtle border */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.6), 0 0 15px rgba(57, 255, 20, 0.3); /* Enhanced shadow and subtle neon glow */
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(to right, #39FF14, transparent); /* Neon line at top */
+            border-radius: 12px 12px 0 0;
+            opacity: 0.7;
+        }
+
+        .metric-card h3 {
+            margin-top: 15px;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+            color: #f0f0f0;
+            font-weight: 700;
+        }
+
+        .metric-card .value {
+            font-size: 2.8em;
+            font-weight: 700;
+            color: #39FF14; /* Neon green for values */
             margin-bottom: 15px;
+            display: block;
+            text-shadow: 0 0 5px rgba(57, 255, 20, 0.4);
         }
 
-        p {
-            font-size: 1.1em;
-            margin-bottom: 20px;
-            color: #555;
+        .metric-card .description {
+            font-size: 0.95em;
+            color: #b0b0b0;
+            margin-bottom: 0;
         }
 
-        .highlight {
-            background-color: #e8f5e9;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            color: #2e7d32;
-        }
-
-        .section-break {
-            width: 70%;
-            margin: 50px auto;
-            border: 0;
-            height: 1px;
-            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0));
-        }
-
-        ul {
-            list-style-type: disc;
-            padding-left: 25px;
-            margin-bottom: 20px;
-            color: #555;
-        }
-
-        li {
-            margin-bottom: 8px;
-            font-size: 1.05em;
-        }
-
+        /* Responsive adjustments */
         @media (max-width: 768px) {
-            .container {
-                padding: 30px 30px;
+            .header h1 {
+                font-size: 2em;
             }
-            h1 {
-                font-size: 2.2em;
+            .main-content {
+                padding: 20px;
             }
-            h2 {
-                font-size: 1.5em;
+            .metrics-grid {
+                grid-template-columns: 1fr; /* Stack cards on smaller screens */
             }
-            p {
-                font-size: 1em;
+            .metric-card {
+                padding: 20px;
+            }
+            .metric-card .value {
+                font-size: 2.5em;
             }
         }
 
         @media (max-width: 480px) {
-            body {
-                padding: 20px 10px;
+            .header h1 {
+                font-size: 1.5em;
             }
-            .container {
-                padding: 20px 15px;
+            .header {
+                padding: 15px 20px;
             }
-            h1 {
-                font-size: 1.8em;
+            .main-content {
+                padding: 15px;
+            }
+            .section-title {
+                font-size: 1.5em;
+            }
+            .metric-card .value {
+                font-size: 2.2em;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Welcome to Our Beautiful Page</h1>
+    <div class="dashboard-container">
+        <header class="header">
+            <h1>Dashboard Overview</h1>
+        </header>
 
-        <p>
-            This is a simple yet elegant web page designed to display various texts. We believe that clarity and aesthetic appeal go hand-in-hand, making your reading experience more enjoyable.
-        </p>
+        <main class="main-content">
+            <h2 class="section-title">Key Metrics</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <span class="value">12,345</span>
+                    <h3>Total Users</h3>
+                    <p class="description">Current active users in the system.</p>
+                </div>
 
-        <h2>About This Section</h2>
-        <p>
-            Here, you can find a brief introduction to the content presented. We aim to provide information in an organized and easy-to-digest format. Notice how the text flows naturally, making it a pleasure to read.
-        </p>
-        <p>
-            You might see some <span class="highlight">highlighted text</span> to draw your attention to key phrases or important concepts. This helps in quickly grasping the core message without having to skim through everything.
-        </p>
+                <div class="metric-card">
+                    <span class="value">$9,876.50</span>
+                    <h3>Revenue (Today)</h3>
+                    <p class="description">Generated revenue for the current day.</p>
+                </div>
 
-        <hr class="section-break">
-
-        <h2>Key Information</h2>
-        <p>
-            Below is a list of important points related to the topic. Lists are great for breaking down complex information into manageable chunks.
-        </p>
-        <ul>
-            <li>
-                <strong>Point One:</strong> This is the first essential piece of information. It's concise and to the point.
-            </li>
-            <li>
-                <strong>Point Two:</strong> The second point provides further details, expanding on the initial concept.
-            </li>
-            <li>
-                <strong>Point Three:</strong> Our third point summarizes a crucial aspect, offering a complete perspective.
-            </li>
-            <li>
-                <strong>Point Four:</strong> Finally, the fourth point offers an additional insight or call to action.
-            </li>
-        </ul>
-
-        <hr class="section-break">
-
-        <h2>A Concluding Thought</h2>
-        <p>
-            Thank you for taking the time to read through this page. We hope the presentation was clear and the content informative. Our goal is always to create a user-friendly experience. Feel free to explore more or revisit this page anytime!
-        </p>
-        <p>
-            &mdash; The Text Display Team
-        </p>
+                <div class="metric-card">
+                    <span class="value">98.7%</span>
+                    <h3>Uptime</h3>
+                    <p class="description">System availability over the last 30 days.</p>
+                </div>
+            </div>
+        </main>
     </div>
 </body>
 </html>
