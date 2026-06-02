@@ -1,98 +1,75 @@
 import { App } from "@slack/bolt";
-import { franc } from "franc";
+import { GoogleGenAI } from "@google/genai";
 import * as dotenv from "dotenv";
 import http from "http";
-import { execSync } from "child_process"; // Native module to run terminal commands
-import fs from "fs"; // Native module to write files
+import { execSync } from "child_process";
+import fs from "fs";
 
 dotenv.config();
 
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN || "",
   appToken: process.env.SLACK_APP_TOKEN || "",
   socketMode: true,
 });
 
-app.event("app_mention", async ({ event, say, client }) => {
+app.event("app_mention", async ({ event, say }) => {
   try {
     const text = event.text;
-    const userId = event.user;
+    const threadTs = event.thread_ts || event.ts;
 
-    if (!userId) return;
+    // Clean out the bot mention tag to get the raw requirement (e.g., "give me a green button")
+    const userPrompt = text.replace(/<@.*?>/g, "").trim();
+    if (!userPrompt) return;
 
-    // 1. Language Inference with robust fallback
-    const langCode = franc(text);
-    // If it's explicitly French, use FR. Otherwise, default to English ('eng' or 'und')
-    const isFrench = langCode === "fra";
-
-    // 2. Role-Based Routing
-    const result = await client.users.info({ user: userId });
-    const userRole = result.user?.is_admin ? "Manager" : "Developer";
-
-    // 3. Inform the user in their language that automation has begun
-    if (isFrench) {
-      await say(
-        `Bonjour ${userRole}! J'active l'agent IA pour générer le code et déployer la preview...`,
-      );
-    } else {
-      await say(
-        `Hello ${userRole}! Activating the AI Agent to generate code and deploy your preview...`,
-      );
-    }
-
-    console.log(
-      `Pipeline triggered by ${userRole} in ${isFrench ? "FR" : "EN"}`,
+    await say(
+      `Processing request: "${userPrompt}"... Generating interface code via Gemini...`,
     );
 
-    // -----------------------------------------------------------------
-    // 4. AUTOMATION LOOP: Generate Code and Push to GitHub
-    // -----------------------------------------------------------------
-    // Clean out the user mention tag (<@U123456>) from the prompt text
-    const cleanPrompt = text.replace(/<@.*?>/g, "").trim();
+    // 1. Direct Gemini to generate ONLY clean, valid HTML/CSS code
+    const aiResponse = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: userPrompt,
+      config: {
+        systemInstruction:
+          "You are an automated frontend developer. Generate a single, complete, valid HTML file containing the requested component. Include beautiful inline CSS styling so it looks professional. Return ONLY the raw HTML code markup. Do not wrap the code in markdown code blocks, and do not include any conversational text or markdown formatting outside the HTML.",
+      },
+    });
 
-    // Simulating the Gemini code generation step for testing:
-    const generatedCode = `// Generated automatically from Slack Prompt: "${cleanPrompt}"
-console.log("Hello from the live preview server!");
-`;
+    const cleanHtmlCode =
+      aiResponse.text || "<h1>Failed to generate component</h1>";
 
-    console.log("💾 Writing generated code to file...");
-    fs.writeFileSync("generated-app.js", generatedCode);
+    // 2. Overwrite your display file with the dynamic AI generated code
+    console.log("💾 Writing AI code to index.html...");
+    fs.writeFileSync("index.html", cleanHtmlCode);
 
-    console.log("🚀 Executing Git operations...");
-    // These terminal commands will run inside your local machine / Render server container
-    execSync("git checkout -B sadullah"); // Create or reset the side branch
-    execSync("git add generated-app.js"); // Stage the new file
+    // 3. Force push the dynamic changes to GitHub to kick off the pipeline
+    console.log("🚀 Pushing dynamic component to GitHub...");
+    execSync("git checkout -B feature-slack-orchestration-v2");
+    execSync("git add index.html");
     execSync(
-      'git commit -m "feat: automated agent code injection" --allow-empty',
+      `git commit -m "feat: AI generated component - ${userPrompt}" --allow-empty`,
     );
-    execSync("git push origin sadullah --force"); // Force push to kick off GitHub Actions instantly
+    execSync("git push origin feature-slack-orchestration-v2 --force");
 
-    console.log(
-      "✅ Code pushed successfully! GitHub Actions is now handling the PR creation.",
+    await say(
+      "Code pushed to repository! Building your temporary preview sandbox now...",
     );
   } catch (error) {
-    console.error("Error handling mention or running automation:", error);
-    await say("An error occurred while processing the automation loop.");
+    console.error("Pipeline Error:", error);
+    await say("An error occurred while compiling your dynamic layout.");
   }
 });
 
 (async () => {
   await app.start();
-  console.log("⚡️ Elio Tax Pipeline: Orchestration Layer is active!");
+  console.log("⚡️ Dynamic AI Generation Engine is active!");
 
-  // -----------------------------------------------------------------
-  // RENDER PORT BINDING FIX: Keep the Web Service Alive
-  // -----------------------------------------------------------------
   const PORT = process.env.PORT || 3000;
-
   const healthCheckServer = http.createServer((req, res) => {
     res.writeHead(200, { "Content-Type": "text/plain" });
-    res.end("Elio Tax Orchestration Engine Liveness: OK\n");
+    res.end("Orchestration Engine Active\n");
   });
-
-  healthCheckServer.listen(Number(PORT), "0.0.0.0", () => {
-    console.log(
-      `📡 Render Health Check server listening on port ${PORT} via 0.0.0.0`,
-    );
-  });
+  healthCheckServer.listen(Number(PORT), "0.0.0.0");
 })();
