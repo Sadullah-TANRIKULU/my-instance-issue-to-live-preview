@@ -60,7 +60,7 @@ jobs:
 
           if [ -z "$RENDER_URL" ]; then
             # Final fallback strategy: Construct the predictable PR sandbox URL string layout manually
-            RENDER_URL="https://my-instance-issue-to-live-preview-pr-${{ steps.manage_pr.outputs.pr_number }}.onrender.com"
+            RENDER_URL="https://my-instance-issue-to-live-preview-1-pr-${{ steps.manage_pr.outputs.pr_number }}.onrender.com"
           fi
           echo "preview_url=$RENDER_URL" >> $GITHUB_OUTPUT
 
