@@ -1,384 +1,380 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Animated Todo List</title>
-<style>
-    /* Basic Reset & Body Styling */
-    body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        margin: 0;
-        background-color: #e8f5e9; /* Light green background */
-        color: #333;
-        overflow-x: hidden; /* Prevent horizontal scroll due to animations */
-    }
-
-    /* Main Container Styling */
-    .container {
-        background-color: #ffffff;
-        padding: 30px 40px;
-        border-radius: 12px;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        width: 100%;
-        max-width: 500px;
-        text-align: center;
-        opacity: 0;
-        transform: translateY(-20px);
-        animation: fadeInSlideUp 0.8s forwards ease-out; /* Page load animation */
-    }
-
-    /* Container load animation */
-    @keyframes fadeInSlideUp {
-        to {
-            opacity: 1;
-            transform: translateY(0);
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Green Tones Blog</title>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Green Tones Palette */
+        :root {
+            --body-bg: #F0FFF0; /* Honeydew - very light green for main background */
+            --card-bg: #E0FFE0; /* Slightly darker honeydew/minty for card backgrounds */
+            --header-footer-bg: #2E8B57; /* Sea Green - medium-dark for header/footer */
+            --primary-text: #006400; /* Dark Green - for text on light backgrounds */
+            --secondary-text: #DCFFDC; /* Very light green - for text on dark backgrounds */
+            --accent-green: #3CB371; /* Medium Sea Green - for buttons/links */
+            --hover-green: #2E8B57; /* Sea Green - slightly darker for hover */
+            --border-green: #90EE90; /* Light Green - for subtle borders */
+            --shadow-green: rgba(46, 139, 87, 0.2); /* Sea Green with transparency for shadows */
         }
-    }
 
-    /* Heading Styling */
-    h1 {
-        color: #388e3c; /* Darker green for heading */
-        margin-bottom: 25px;
-        font-size: 2.2em;
-        letter-spacing: 1px;
-        position: relative;
-    }
+        /* General Body Styles */
+        body {
+            font-family: 'Open Sans', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--body-bg);
+            color: var(--primary-text);
+            line-height: 1.6;
+            scroll-behavior: smooth;
+        }
 
-    /* Underline animation for heading */
-    h1::after {
-        content: '';
-        position: absolute;
-        left: 50%;
-        bottom: -10px;
-        transform: translateX(-50%);
-        width: 60px;
-        height: 3px;
-        background-color: #66bb6a; /* Medium green underline */
-        border-radius: 2px;
-    }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Merriweather', serif;
+            color: var(--primary-text);
+            margin-top: 0;
+        }
 
-    /* Add Todo Section */
-    .add-todo {
-        display: flex;
-        margin-bottom: 30px;
-        gap: 10px;
-    }
+        a {
+            text-decoration: none;
+            color: var(--accent-green);
+        }
 
-    #newTodoInput {
-        flex-grow: 1;
-        padding: 12px 15px;
-        border: 2px solid #a5d6a7; /* Light green border */
-        border-radius: 8px;
-        font-size: 1em;
-        outline: none;
-        transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    }
+        a:hover {
+            color: var(--hover-green);
+        }
 
-    #newTodoInput:focus {
-        border-color: #66bb6a; /* Medium green on focus */
-        box-shadow: 0 0 0 3px rgba(102, 187, 106, 0.3); /* Subtle glow */
-    }
+        /* Header Styles */
+        header {
+            background-color: var(--header-footer-bg);
+            color: var(--secondary-text);
+            padding: 1.5rem 0;
+            box-shadow: 0 2px 5px var(--shadow-green);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
 
-    #addTodoBtn {
-        background-color: #4CAF50; /* Primary green button */
-        color: white;
-        padding: 12px 20px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 1em;
-        font-weight: bold;
-        transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-    }
+        .navbar {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-    #addTodoBtn:hover {
-        background-color: #45a049; /* Darker green on hover */
-        transform: translateY(-2px); /* Lift effect */
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-    }
+        .logo {
+            font-family: 'Merriweather', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--secondary-text);
+        }
 
-    #addTodoBtn:active {
-        transform: translateY(0);
-        box-shadow: none;
-    }
+        .nav-links {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
 
-    /* Todo List Styling */
-    #todoList {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
+        .nav-links li {
+            margin-left: 25px;
+        }
 
-    .todo-item {
-        display: flex;
-        align-items: center;
-        background-color: #f9fdf9; /* Very light green item background */
-        padding: 15px;
-        margin-bottom: 12px;
-        border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
-        transition: all 0.4s ease-out; /* Main transition for items */
-        opacity: 0;
-        transform: translateY(20px); /* Initial state for new items */
-        position: relative;
-        border-left: 5px solid transparent; /* For visual status */
-    }
+        .nav-links a {
+            color: var(--secondary-text);
+            font-weight: 600;
+            padding: 5px 0;
+            transition: color 0.3s ease, border-bottom 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
 
-    /* Animation for new todo items */
-    .todo-item.show {
-        opacity: 1;
-        transform: translateY(0);
-    }
+        .nav-links a:hover {
+            color: var(--border-green);
+            border-bottom: 2px solid var(--border-green);
+        }
 
-    /* Animation for deleting todo items */
-    .todo-item.fade-out {
-        opacity: 0;
-        transform: translateX(100px); /* Slide out to the right */
-        max-height: 0; /* Collapse height */
-        padding: 0 15px; /* Collapse padding */
-        margin-bottom: 0; /* Collapse margin */
-        overflow: hidden;
-        transition: all 0.5s ease-out;
-    }
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--header-footer-bg) 0%, var(--accent-green) 100%);
+            color: var(--secondary-text);
+            text-align: center;
+            padding: 5rem 20px;
+            margin-bottom: 3rem;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 5px 15px var(--shadow-green);
+        }
 
-    .todo-item:last-child {
-        margin-bottom: 0;
-    }
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            color: var(--secondary-text);
+        }
 
-    /* Custom Checkbox Styling */
-    .todo-item input[type="checkbox"] {
-        appearance: none; /* Hide default checkbox */
-        width: 22px;
-        height: 22px;
-        border: 2px solid #a5d6a7; /* Light green border for checkbox */
-        border-radius: 5px;
-        cursor: pointer;
-        margin-right: 15px;
-        position: relative;
-        flex-shrink: 0; /* Prevent checkbox from shrinking */
-        transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
-    }
+        .hero p {
+            font-size: 1.3rem;
+            max-width: 800px;
+            margin: 0 auto 2rem auto;
+            color: var(--secondary-text);
+        }
 
-    .todo-item input[type="checkbox"]:checked {
-        background-color: #66bb6a; /* Medium green when checked */
-        border-color: #66bb6a;
-        transform: scale(1.1); /* Pop effect on check */
-    }
-
-    .todo-item input[type="checkbox"]:checked::after {
-        content: '\2713'; /* Checkmark character */
-        font-size: 16px;
-        color: white;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        line-height: 1;
-    }
-
-    /* Task Text Styling */
-    .todo-item .task-text {
-        flex-grow: 1;
-        text-align: left;
-        font-size: 1.1em;
-        color: #333;
-        transition: color 0.4s ease, text-decoration 0.4s ease, font-style 0.4s ease;
-        word-break: break-word; /* Prevent text overflow */
-    }
-
-    /* Completed Task Styling */
-    .todo-item.completed .task-text {
-        color: #888; /* Grey for completed text */
-        text-decoration: line-through;
-        font-style: italic;
-    }
-
-    .todo-item.completed {
-        background-color: #ffebee; /* Very light red for completed item background */
-        border-left-color: #ef5350; /* Red left border to indicate completed */
-        box-shadow: 0 4px 12px rgba(239, 83, 80, 0.1); /* Reddish shadow */
-    }
-
-    /* Delete Button Styling */
-    .delete-btn {
-        background-color: #ef5350; /* Primary red button */
-        color: white;
-        border: none;
-        border-radius: 50%; /* Circular button */
-        width: 36px;
-        height: 36px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        font-size: 1.2em;
-        margin-left: 15px;
-        flex-shrink: 0; /* Prevent button from shrinking */
-        transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-        line-height: 1;
-    }
-
-    .delete-btn:hover {
-        background-color: #e53935; /* Darker red on hover */
-        transform: scale(1.1); /* Pop effect */
-        box-shadow: 0 4px 10px rgba(239, 83, 80, 0.3);
-    }
-
-    .delete-btn:active {
-        transform: scale(1);
-        box-shadow: none;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 600px) {
-        .container {
-            padding: 25px 20px;
+        .btn-primary {
+            display: inline-block;
+            background-color: var(--border-green);
+            color: var(--primary-text);
+            padding: 12px 25px;
             border-radius: 8px;
-            margin: 15px;
+            font-weight: 700;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 4px 8px var(--shadow-green);
         }
-        h1 {
-            font-size: 1.8em;
-            margin-bottom: 20px;
+
+        .btn-primary:hover {
+            background-color: #83d483; /* Slightly darker light green */
+            transform: translateY(-2px);
+            color: var(--primary-text);
         }
-        .add-todo {
-            flex-direction: column; /* Stack input and button */
-            gap: 8px;
-            margin-bottom: 25px;
+
+        /* Main Content Grid */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
         }
-        #newTodoInput, #addTodoBtn {
-            font-size: 0.95em;
-            padding: 10px 12px;
+
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2.5rem;
+            margin-bottom: 4rem;
         }
-        .todo-item {
-            padding: 12px;
-            margin-bottom: 10px;
-            font-size: 0.95em;
+
+        .blog-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 15px var(--shadow-green);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
         }
-        .todo-item input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            margin-right: 10px;
+
+        .blog-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 25px rgba(46, 139, 87, 0.3);
         }
-        .delete-btn {
-            width: 32px;
-            height: 32px;
-            font-size: 1em;
-            margin-left: 10px;
+
+        .blog-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-bottom: 3px solid var(--border-green);
         }
-    }
-</style>
+
+        .card-content {
+            padding: 25px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-content h2 {
+            font-size: 1.7rem;
+            margin-bottom: 0.8rem;
+            line-height: 1.3;
+            color: var(--primary-text);
+        }
+
+        .card-content p {
+            font-size: 0.95rem;
+            color: var(--primary-text);
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+
+        .card-footer {
+            margin-top: auto;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-green);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-footer span {
+            font-size: 0.85rem;
+            color: var(--primary-text);
+            opacity: 0.8;
+        }
+
+        .read-more {
+            display: inline-block;
+            background-color: var(--accent-green);
+            color: var(--secondary-text);
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+
+        .read-more:hover {
+            background-color: var(--hover-green);
+            color: var(--secondary-text);
+        }
+
+        /* Footer Styles */
+        footer {
+            background-color: var(--header-footer-bg);
+            color: var(--secondary-text);
+            text-align: center;
+            padding: 2.5rem 20px;
+            font-size: 0.9rem;
+            box-shadow: 0 -2px 5px var(--shadow-green);
+        }
+
+        footer p {
+            margin: 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .logo {
+                margin-bottom: 15px;
+            }
+
+            .nav-links {
+                flex-direction: column;
+                width: 100%;
+                text-align: center;
+            }
+
+            .nav-links li {
+                margin: 10px 0;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .blog-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+        }
+    </style>
 </head>
 <body>
+    <header>
+        <nav class="navbar">
+            <a href="#" class="logo">GreenLeaf Blog</a>
+            <ul class="nav-links">
+                <li><a href="#">Home</a></li>
+                <li><a href="#">About</a></li>
+                <li><a href="#">Categories</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
 
-<div class="container">
-    <h1>My Todo List</h1>
-    <div class="add-todo">
-        <input type="text" id="newTodoInput" placeholder="Add a new task...">
-        <button id="addTodoBtn">Add Task</button>
-    </div>
-    <ul id="todoList">
-        <!-- Todo items will be dynamically added here by JavaScript -->
-    </ul>
-</div>
+    <main>
+        <section class="hero">
+            <h1>Embrace the Green: Sustainable Living & Nature's Wonders</h1>
+            <p>Dive into a world of lush ideas, eco-friendly tips, and the serene beauty of the natural world. Discover how to live greener, healthier, and happier.</p>
+            <a href="#latest-posts" class="btn-primary">Explore Latest Posts</a>
+        </section>
 
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const newTodoInput = document.getElementById('newTodoInput');
-        const addTodoBtn = document.getElementById('addTodoBtn');
-        const todoList = document.getElementById('todoList');
+        <section id="latest-posts" class="container">
+            <h2>Latest Green Reads</h2>
+            <div class="blog-grid">
+                <article class="blog-card">
+                    <img src="https://images.unsplash.com/photo-1542838188-43ff3d35a720?auto=format&fit=crop&q=80&w=800&h=220&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Vibrant green leaves">
+                    <div class="card-content">
+                        <h2>The Secret Language of Plants</h2>
+                        <p>Explore the fascinating ways plants communicate with each other and their environment, a hidden world of signals and strategies.</p>
+                        <div class="card-footer">
+                            <span>May 10, 2024</span>
+                            <a href="#" class="read-more">Read More</a>
+                        </div>
+                    </div>
+                </article>
 
-        // Function to create a new todo item HTML element
-        function createTodoItem(taskText, isCompleted = false) {
-            const listItem = document.createElement('li');
-            listItem.classList.add('todo-item');
-            if (isCompleted) {
-                listItem.classList.add('completed');
-            }
+                <article class="blog-card">
+                    <img src="https://images.unsplash.com/photo-1507525428034-b723cf961cfe?auto=format&fit=crop&q=80&w=800&h=220&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Serene green forest trail">
+                    <div class="card-content">
+                        <h2>Mindful Walks in Nature: A Path to Serenity</h2>
+                        <p>Discover the therapeutic benefits of mindful walking in nature and how it can reduce stress and enhance well-being.</p>
+                        <div class="card-footer">
+                            <span>May 08, 2024</span>
+                            <a href="#" class="read-more">Read More</a>
+                        </div>
+                    </div>
+                </article>
 
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.checked = isCompleted;
-            // Attach event listener for toggling completion
-            checkbox.addEventListener('change', () => toggleComplete(listItem));
+                <article class="blog-card">
+                    <img src="https://images.unsplash.com/photo-1510414902404-2ee637175440?auto=format&fit=crop&q=80&w=800&h=220&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Garden tools and seedlings">
+                    <div class="card-content">
+                        <h2>Start Your Own Herb Garden: Beginner's Guide</h2>
+                        <p>Everything you need to know to cultivate a thriving herb garden, even if you have a black thumb. Fresh flavors await!</p>
+                        <div class="card-footer">
+                            <span>May 05, 2024</span>
+                            <a href="#" class="read-more">Read More</a>
+                        </div>
+                    </div>
+                </article>
 
-            const taskSpan = document.createElement('span');
-            taskSpan.classList.add('task-text');
-            taskSpan.textContent = taskText;
+                <article class="blog-card">
+                    <img src="https://images.unsplash.com/photo-1589256910350-0a75f32a54fb?auto=format&fit=crop&q=80&w=800&h=220&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Solar panels on a green roof">
+                    <div class="card-content">
+                        <h2>Green Energy Solutions for a Sustainable Home</h2>
+                        <p>Explore practical ways to incorporate green energy into your home, from solar power to energy-efficient appliances.</p>
+                        <div class="card-footer">
+                            <span>May 02, 2024</span>
+                            <a href="#" class="read-more">Read More</a>
+                        </div>
+                    </div>
+                </article>
 
-            const deleteButton = document.createElement('button');
-            deleteButton.classList.add('delete-btn');
-            deleteButton.innerHTML = '&times;'; // Unicode multiplication sign for 'x'
-            // Attach event listener for deleting the item
-            deleteButton.addEventListener('click', () => deleteTodo(listItem));
+                <article class="blog-card">
+                    <img src="https://images.unsplash.com/photo-1574763261989-1304543b573a?auto=format&fit=crop&q=80&w=800&h=220&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Forest path with sunlight">
+                    <div class="card-content">
+                        <h2>The Importance of Preserving Our Forests</h2>
+                        <p>Understand why forests are vital for our planet's health and what steps we can take to protect these irreplaceable ecosystems.</p>
+                        <div class="card-footer">
+                            <span>April 28, 2024</span>
+                            <a href="#" class="read-more">Read More</a>
+                        </div>
+                    </div>
+                </article>
 
-            listItem.appendChild(checkbox);
-            listItem.appendChild(taskSpan);
-            listItem.appendChild(deleteButton);
+                <article class="blog-card">
+                    <img src="https://images.unsplash.com/photo-1533614138676-476495b461f6?auto=format&fit=crop&q=80&w=800&h=220&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Woman drinking green smoothie">
+                    <div class="card-content">
+                        <h2>Green Smoothies: Your Daily Dose of Vitality</h2>
+                        <p>Learn how to whip up delicious and nutritious green smoothies that will boost your energy and improve your overall health.</p>
+                        <div class="card-footer">
+                            <span>April 25, 2024</span>
+                            <a href="#" class="read-more">Read More</a>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </main>
 
-            // Trigger the "show" animation for new items after they are appended
-            // requestAnimationFrame ensures the browser paints before applying 'show'
-            requestAnimationFrame(() => {
-                listItem.classList.add('show');
-            });
-
-            return listItem;
-        }
-
-        // Initialize with some dummy tasks
-        const initialTasks = [
-            { text: "Learn modern JavaScript", completed: false },
-            { text: "Design UI for new project", completed: false },
-            { text: "Review latest pull requests", completed: true },
-            { text: "Plan weekend getaway", completed: false }
-        ];
-
-        initialTasks.forEach(task => {
-            todoList.appendChild(createTodoItem(task.text, task.completed));
-        });
-
-        // Function to add a new todo to the list
-        function addTodo() {
-            const taskText = newTodoInput.value.trim();
-            if (taskText === "") {
-                // Simple validation
-                newTodoInput.focus();
-                return;
-            }
-
-            const newItem = createTodoItem(taskText);
-            todoList.prepend(newItem); // Add new items to the top of the list
-            newTodoInput.value = ''; // Clear input field
-            newTodoInput.focus(); // Keep focus on input for quick entry
-        }
-
-        // Function to toggle a task's completion status
-        function toggleComplete(item) {
-            item.classList.toggle('completed');
-            // The checkbox state is inherently updated by the browser for 'change' event
-        }
-
-        // Function to delete a todo item with animation
-        function deleteTodo(item) {
-            item.classList.add('fade-out'); // Trigger the fade-out animation
-            // Remove the item from DOM after the animation completes
-            item.addEventListener('transitionend', () => {
-                item.remove();
-            }, { once: true }); // Ensure event listener is removed after one use
-        }
-
-        // Event listener for the "Add Task" button
-        addTodoBtn.addEventListener('click', addTodo);
-
-        // Event listener for the "Enter" key press on the input field
-        newTodoInput.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter') {
-                addTodo();
-            }
-        });
-    });
-</script>
+    <footer>
+        <p>&copy; 2024 GreenLeaf Blog. All rights reserved. | Designed with love (and lots of green).</p>
+    </footer>
 </body>
 </html>
