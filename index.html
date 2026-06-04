@@ -1,17 +1,386 @@
-<button style="
-    background-color: #4CAF50; /* A pleasant green */
-    color: white;
-    padding: 12px 24px;
-    border: none;
-    border-radius: 8px; /* Slightly rounded corners */
-    cursor: pointer;
-    font-size: 18px;
-    font-weight: bold;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    transition-duration: 0.4s; /* Smooth transition for hover effect */
-    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); /* Subtle shadow */
-">
-    Click Me
-</button>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Small Blog</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Lato:wght@400;700&display=swap');
+
+        :root {
+            --primary-color: #3f51b5; /* Indigo */
+            --primary-dark-color: #303f9f;
+            --accent-color: #ff4081; /* Pink */
+            --background-color: #f0f2f5;
+            --card-background: #ffffff;
+            --text-color: #333333;
+            --light-text-color: #666666;
+            --border-color: #e0e0e0;
+            --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.08);
+            --shadow-medium: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: var(--shadow-medium);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        header h1 {
+            margin: 0;
+            font-family: 'Merriweather', serif;
+            font-size: 2.5em;
+            letter-spacing: 1px;
+        }
+
+        #auth-status {
+            font-size: 0.9em;
+            margin-top: 10px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        main {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        section {
+            background-color: var(--card-background);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-light);
+            margin-bottom: 30px;
+        }
+
+        h2, h3 {
+            font-family: 'Merriweather', serif;
+            color: var(--primary-dark-color);
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        textarea {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: 'Lato', sans-serif;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: var(--primary-dark-color);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            gap: 15px; /* Spacing between items */
+        }
+
+        .header-controls h2 {
+            margin: 0;
+            flex-grow: 1;
+        }
+        
+        #new-post-form {
+            margin-top: 20px;
+            border: 1px dashed var(--border-color);
+            padding: 20px;
+            background-color: #fdfdfd;
+        }
+
+        .blog-post-card {
+            background-color: var(--card-background);
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-light);
+            position: relative;
+        }
+
+        .blog-post-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1.8em;
+        }
+
+        .blog-post-card .post-meta {
+            font-size: 0.9em;
+            color: var(--light-text-color);
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .blog-post-card p {
+            margin-bottom: 20px;
+        }
+
+        .delete-button {
+            background-color: #e57373; /* Light Red */
+            color: white;
+            padding: 8px 15px;
+            font-size: 0.9em;
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+        }
+
+        .delete-button:hover {
+            background-color: #ef5350; /* Red */
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            background-color: var(--primary-dark-color);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9em;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2em;
+            }
+            main {
+                margin: 20px auto;
+                padding: 0 15px;
+            }
+            section {
+                padding: 20px;
+            }
+            input[type="text"],
+            input[type="password"],
+            textarea {
+                width: calc(100% - 20px);
+            }
+            .header-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .header-controls button {
+                margin-top: 10px;
+                width: 100%;
+            }
+            .blog-post-card .delete-button {
+                position: static;
+                margin-top: 15px;
+                width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>My Awesome Blog</h1>
+        <div id="auth-status"></div>
+    </header>
+
+    <main>
+        <section id="login-section" style="display: none;">
+            <h2>Log In to Manage Posts</h2>
+            <p style="font-size: 0.9em; color: var(--light-text-color); margin-bottom: 25px;">
+                Use the default credentials: Username `user`, Password `password`.
+                <br>
+                <strong>Note:</strong> This demo stores the password in your browser's local storage for simplicity, which is highly insecure for real applications.
+            </p>
+            <input type="text" id="username" placeholder="Username (e.g., user)">
+            <input type="password" id="password" placeholder="Password (e.g., password)">
+            <button onclick="login()">Log In</button>
+        </section>
+
+        <section id="blog-section" style="display: none;">
+            <div class="header-controls">
+                <h2>Blog Posts</h2>
+                <button onclick="logout()">Log Out</button>
+            </div>
+
+            <div id="new-post-form">
+                <h3>Create New Post</h3>
+                <input type="text" id="new-post-title" placeholder="Post Title">
+                <textarea id="new-post-content" placeholder="Post Content (Markdown not supported, plain text only for this demo)"></textarea>
+                <button onclick="addPost()">Add Post</button>
+            </div>
+
+            <div id="blog-posts-container" style="margin-top: 30px;">
+                <!-- Blog posts will be rendered here by JavaScript -->
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 My Small Blog. All rights reserved.</p>
+    </footer>
+
+    <script>
+        let blogPosts = [];
+        const DEFAULT_USERNAME = 'user';
+        const DEFAULT_PASSWORD = 'password';
+
+        // Initializes the blog, checks login status, and renders posts
+        function init() {
+            const storedPosts = localStorage.getItem('blog_posts');
+            if (storedPosts) {
+                blogPosts = JSON.parse(storedPosts);
+            } else {
+                // Initialize with dummy data if no posts exist
+                blogPosts = [
+                    { id: 1, title: "Welcome to My Blog!", content: "This is your very first blog post. You can edit or delete it once you log in. Enjoy blogging!", date: new Date(2023, 10, 20).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) },
+                    { id: 2, title: "About This Simple Blog", content: "This is a basic blog platform created with HTML, CSS, and JavaScript. It uses local storage for persistence.", date: new Date(2023, 10, 22).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) }
+                ];
+                localStorage.setItem('blog_posts', JSON.stringify(blogPosts));
+            }
+            
+            const loggedInUser = localStorage.getItem('blog_loggedInUser');
+            const storedPassword = localStorage.getItem('blog_userPassword');
+
+            // IMPORTANT: Storing passwords directly in localStorage is INSECURE and
+            // should NEVER be done in a real application. This is implemented
+            // solely to fulfill the explicit request of the prompt.
+            if (loggedInUser && storedPassword === DEFAULT_PASSWORD) {
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('blog-section').style.display = 'block';
+                document.getElementById('auth-status').innerHTML = `Logged in as: <strong>${loggedInUser}</strong>`;
+                renderPosts(true); // Render posts with delete buttons
+            } else {
+                document.getElementById('login-section').style.display = 'block';
+                document.getElementById('blog-section').style.display = 'none';
+                document.getElementById('auth-status').innerHTML = '';
+                renderPosts(false); // Render posts without delete buttons
+            }
+        }
+
+        // Handles user login
+        function login() {
+            const usernameInput = document.getElementById('username').value;
+            const passwordInput = document.getElementById('password').value;
+
+            if (usernameInput === DEFAULT_USERNAME && passwordInput === DEFAULT_PASSWORD) {
+                localStorage.setItem('blog_loggedInUser', usernameInput);
+                localStorage.setItem('blog_userPassword', passwordInput); // Storing password as requested
+                init(); // Re-initialize to show blog section
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+            } else {
+                alert('Invalid username or password!');
+            }
+        }
+
+        // Handles user logout
+        function logout() {
+            localStorage.removeItem('blog_loggedInUser');
+            localStorage.removeItem('blog_userPassword'); // Remove stored password on logout
+            init(); // Re-initialize to show login section
+        }
+
+        // Adds a new blog post
+        function addPost() {
+            const titleInput = document.getElementById('new-post-title');
+            const contentInput = document.getElementById('new-post-content');
+
+            const title = titleInput.value.trim();
+            const content = contentInput.value.trim();
+
+            if (title && content) {
+                const newPost = {
+                    id: Date.now(), // Unique ID based on timestamp
+                    title: title,
+                    content: content,
+                    date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                };
+                blogPosts.unshift(newPost); // Add to the beginning of the array
+                localStorage.setItem('blog_posts', JSON.stringify(blogPosts));
+                renderPosts(true); // Re-render posts (logged in, so show delete buttons)
+                titleInput.value = '';
+                contentInput.value = '';
+            } else {
+                alert('Please enter both title and content for the post.');
+            }
+        }
+
+        // Deletes a blog post by its ID
+        function deletePost(id) {
+            if (confirm('Are you sure you want to delete this post?')) {
+                blogPosts = blogPosts.filter(post => post.id !== id);
+                localStorage.setItem('blog_posts', JSON.stringify(blogPosts));
+                renderPosts(true); // Re-render posts (logged in, so show delete buttons)
+            }
+        }
+
+        // Renders all blog posts in the container
+        function renderPosts(isLoggedIn) {
+            const container = document.getElementById('blog-posts-container');
+            container.innerHTML = ''; // Clear previous posts
+
+            if (blogPosts.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--light-text-color);">No blog posts yet. Be the first to create one!</p>';
+                return;
+            }
+
+            blogPosts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.classList.add('blog-post-card');
+                postElement.innerHTML = `
+                    <h3>${post.title}</h3>
+                    <p class="post-meta">Posted on ${post.date}</p>
+                    <p>${post.content}</p>
+                    ${isLoggedIn ? `<button class="delete-button" onclick="deletePost(${post.id})">Delete</button>` : ''}
+                `;
+                container.appendChild(postElement);
+            });
+        }
+
+        // Initialize the blog when the page loads
+        window.onload = init;
+    </script>
+</body>
+</html>
