@@ -65,7 +65,7 @@ jobs:
           echo "preview_url=$RENDER_URL" >> $GITHUB_OUTPUT
 
       - name: Post Sandbox Link Back to Slack
-        uses: slackapi/slack-github-action@v2.0.0
+        uses: slackapi/slack-github-action@v2.1.1
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
